@@ -16,7 +16,7 @@ env:
   AWS_ACCOUNT_ID: "618246140803"
   ECR_REPOSITORY: secret
   ECS_CLUSTER: secret
-  ECS_SERVICE: secret
+  ECS_SERVICE: secret-service
 
 jobs:
   deploy:
