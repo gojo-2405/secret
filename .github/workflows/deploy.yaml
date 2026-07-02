@@ -17,6 +17,7 @@ env:
   ECR_REPOSITORY: secret
   ECS_CLUSTER: secret
   ECS_SERVICE: secret-service
+  CONTAINER_NAME: secret
 
 jobs:
   deploy:
@@ -49,7 +50,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: ${{ env.ECS_SERVICE }}
+          container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
       - name: Deploy to ECS
