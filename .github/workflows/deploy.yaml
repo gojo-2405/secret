@@ -1,4 +1,3 @@
-```yaml
 name: Deploy Secret Service to ECS
 
 on:
@@ -15,8 +14,9 @@ permissions:
 env:
   AWS_REGION: us-east-1
   AWS_ACCOUNT_ID: "618246140803"
-  ECR_REPOSITORY: secret-env-test
-  ECS_SERVICE: secret-service
+  ECR_REPOSITORY: secret
+  ECS_CLUSTER: secret
+  ECS_SERVICE: secret
 
 jobs:
   deploy:
@@ -33,32 +33,29 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker Image
         run: |
           docker build -t $ECR_REPOSITORY:${{ github.sha }} .
-          docker tag $ECR_REPOSITORY:${{ github.sha }} \
-          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ github.sha }}
+          docker tag $ECR_REPOSITORY:${{ github.sha }} $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ github.sha }}
 
       - name: Push Docker Image
         run: |
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${{ github.sha }}
 
-      - name: Render Amazon ECS Task Definition
-        id: task-def
+      - name: Render ECS Task Definition
+        id: render-task-definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: secret-env-test
           image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
-      - name: Deploy Amazon ECS Task Definition
+      - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          task-definition: ${{ steps.render-task-definition.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
+          cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-```
